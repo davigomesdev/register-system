@@ -9,11 +9,11 @@
     "lint": "eslint ./src/**",
     "lint:fix": "eslint ./src/** --fix",
     "build": "tsc -p tsconfig.build.json",
-    "test": "node --conditions=development --import tsx --test --test-reporter=spec ./src ./test/e2e",
-    "test:unit": "node --conditions=development --import tsx --test --test-reporter=spec ./src",
-    "test:e2e": "node --conditions=development --import tsx --test --test-reporter=spec ./test/e2e",
-    "test:integration": "node --conditions=development --import tsx --env-file-if-exists=.env.development --test --test-reporter=spec ./test/integration",
-    "test:watch": "node --conditions=development --import tsx --test --watch ./src ./test/e2e"
+    "test": "node --conditions=development --import tsx --test --test-reporter=spec \"./src/**/*.test.ts\" \"./test/e2e/**/*.test.ts\"",
+    "test:unit": "node --conditions=development --import tsx --test --test-reporter=spec \"./src/**/*.test.ts\"",
+    "test:e2e": "node --conditions=development --import tsx --test --test-reporter=spec \"./test/e2e/**/*.test.ts\"",
+    "test:integration": "node --conditions=development --import tsx --env-file-if-exists=.env.development --test --test-reporter=spec \"./test/integration/**/*.test.ts\"",
+    "test:watch": "node --conditions=development --import tsx --test --watch \"./src/**/*.test.ts\" \"./test/e2e/**/*.test.ts\""
   },
   "author": "Davi Gomes <davigomescarmo9@gmail.com>",
   "license": "MIT",
