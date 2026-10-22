@@ -33,7 +33,7 @@ RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
 FROM base AS builder
 
 COPY --from=deps /app/node_modules ./node_modules
-COPY package.json pnpm-lock.yaml pnpm-workspace.yaml tsconfig.json ./
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml tsconfig.json tsconfig.build.json ./
 COPY src ./src
 
 RUN pnpm build \

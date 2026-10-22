@@ -9,9 +9,7 @@ export const createUserSchema = z.object({
   cpfCnpj: z
     .string()
     .regex(/^\d+$/, 'cpfCnpj must contain only digits')
-    .refine((value) => cpf.isValid(value) || cnpj.isValid(value), 'invalid CPF or CNPJ')
-    .nullable()
-    .optional(),
+    .refine((value) => cpf.isValid(value) || cnpj.isValid(value), 'invalid CPF or CNPJ'),
   email: z.email('invalid email address'),
   phone: z.string().refine((value) => isValidPhoneNumber(value, 'BR'), 'invalid phone number'),
   password: z.string().min(8, 'password must be at least 8 characters long'),

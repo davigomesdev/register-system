@@ -60,6 +60,7 @@ describe('UserEntity', () => {
 
     assert.equal(user.name, 'Jane');
     assert.equal(user.email, 'jane@example.com');
+    assert.equal(user.phone, '85988888888');
     assert.equal(user.type, UserTypeEnum.MODERATOR);
   });
 

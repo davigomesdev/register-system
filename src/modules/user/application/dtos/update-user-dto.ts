@@ -13,9 +13,7 @@ export const updateUserBodySchema = z.object({
   cpfCnpj: z
     .string()
     .regex(/^\d+$/, 'cpfCnpj must contain only digits')
-    .refine((value) => cpf.isValid(value) || cnpj.isValid(value), 'invalid CPF or CNPJ')
-    .nullable()
-    .optional(),
+    .refine((value) => cpf.isValid(value) || cnpj.isValid(value), 'invalid CPF or CNPJ'),
   email: z.email('invalid email address'),
   phone: z.string().refine((value) => isValidPhoneNumber(value, 'BR'), 'invalid phone number'),
   type: z.enum(UserTypeEnum),

@@ -103,6 +103,7 @@ export class UserEntity extends Entity<CreateUserProps> {
     this.props.name = props.name;
     this.props.cpfCnpj = props.cpfCnpj;
     this.props.email = props.email;
+    this.props.phone = props.phone;
     this.props.type = props.type;
     this.props.updatedAt = new Date();
 
