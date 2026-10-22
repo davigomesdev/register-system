@@ -124,7 +124,7 @@ export class CustomerPersistenceRepository implements CustomerRepository {
         `UPDATE customers
          SET deleted_at = $2
          WHERE id = $1 AND deleted_at IS NULL`,
-        [customer.id, customer.deletedAt, customer.updatedAt],
+        [customer.id, customer.deletedAt],
       )
       .catch((error: unknown) => {
         throw new DatabaseError(error instanceof Error ? error.message : 'unknown database error');

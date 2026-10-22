@@ -140,7 +140,7 @@ export class ProductPersistenceRepository implements ProductRepository {
         `UPDATE products
          SET deleted_at = $2
          WHERE id = $1 AND deleted_at IS NULL`,
-        [product.id, product.deletedAt, product.updatedAt],
+        [product.id, product.deletedAt],
       )
       .catch((error: unknown) => {
         throw new DatabaseError(error instanceof Error ? error.message : 'unknown database error');
