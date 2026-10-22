@@ -12,7 +12,7 @@
     "test": "node --conditions=development --import tsx --test --test-reporter=spec ./src ./test/e2e",
     "test:unit": "node --conditions=development --import tsx --test --test-reporter=spec ./src",
     "test:e2e": "node --conditions=development --import tsx --test --test-reporter=spec ./test/e2e",
-    "test:integration": "node --conditions=development --import tsx --env-file=.env.development --test --test-reporter=spec ./test/integration",
+    "test:integration": "node --conditions=development --import tsx --env-file-if-exists=.env.development --test --test-reporter=spec ./test/integration",
     "test:watch": "node --conditions=development --import tsx --test --watch ./src ./test/e2e"
   },
   "author": "Davi Gomes <davigomescarmo9@gmail.com>",
