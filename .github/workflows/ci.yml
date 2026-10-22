@@ -67,10 +67,14 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Unit tests
-        run: pnpm test:unit
+        run: |
+          shopt -s globstar
+          node --conditions=development --import tsx --test --test-reporter=spec src/**/*.test.ts
 
       - name: E2E tests
-        run: pnpm test:e2e
+        run: |
+          shopt -s globstar
+          node --conditions=development --import tsx --test --test-reporter=spec test/e2e/**/*.test.ts
 
   integration:
     name: Integration tests
@@ -151,7 +155,9 @@ jobs:
           fi
 
       - name: Integration tests
-        run: pnpm test:integration
+        run: |
+          shopt -s globstar
+          node --conditions=development --import tsx --test --test-reporter=spec test/integration/**/*.test.ts
 
   docker:
     name: Docker build
