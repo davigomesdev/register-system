@@ -1,0 +1,144 @@
+# =============================================================================
+# docker-compose-prod.yml — Production environment
+# Usage: docker compose -f docker-compose-prod.yml up -d --build
+# IMPORTANT: Always provide real secrets via environment or .env file
+# =============================================================================
+name: register-system-prod
+
+services:
+  postgres:
+    image: postgres:17-alpine
+    container_name: register-system-postgres-prod
+    restart: always
+    environment:
+      POSTGRES_DB: ${DATABASE_NAME:?DATABASE_NAME is required}
+      POSTGRES_USER: ${DATABASE_USER:?DATABASE_USER is required}
+      POSTGRES_PASSWORD: ${DATABASE_PASSWORD:?DATABASE_PASSWORD is required}
+      TZ: UTC
+    volumes:
+      - postgres_data_prod:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DATABASE_USER} -d ${DATABASE_NAME}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+    networks:
+      - register-system-net-prod
+
+  redis:
+    image: redis:7-alpine
+    container_name: register-system-redis-prod
+    restart: always
+    command: >
+      redis-server
+      --appendonly yes
+      --maxmemory 512mb
+      --maxmemory-policy allkeys-lru
+      --requirepass ${REDIS_PASSWORD:?REDIS_PASSWORD is required}
+    volumes:
+      - redis_data_prod:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+    networks:
+      - register-system-net-prod
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: runner
+    container_name: register-system-api-prod
+    restart: always
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    ports:
+      - "${PORT:-5000}:5000"
+    environment:
+      ENV: production
+      LOG_LEVEL: info
+
+      HOST: 0.0.0.0
+      PORT: 5000
+      WEB_URL: ${WEB_URL:?WEB_URL is required}
+
+      DATABASE_HOST: postgres
+      DATABASE_PORT: 5432
+      DATABASE_NAME: ${DATABASE_NAME:?DATABASE_NAME is required}
+      DATABASE_USER: ${DATABASE_USER:?DATABASE_USER is required}
+      DATABASE_PASSWORD: ${DATABASE_PASSWORD:?DATABASE_PASSWORD is required}
+      DATABASE_SSLMODE: ${DATABASE_SSLMODE:-disable}
+      DATABASE_TIMEZONE: UTC
+
+      REDIS_DB: ${REDIS_DB:-0}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD:?REDIS_PASSWORD is required}
+
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY:?JWT_SECRET_KEY is required}
+      ENCRYPTION_KEY: ${ENCRYPTION_KEY:?ENCRYPTION_KEY is required}
+      REFRESH_TOKEN_SECRET_KEY: ${REFRESH_TOKEN_SECRET_KEY:?REFRESH_TOKEN_SECRET_KEY is required}
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:5000/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+    networks:
+      - register-system-net-prod
+
+  migrate:
+    image: flyway/flyway:11-alpine
+    container_name: register-system-migrate-prod
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./database/migrations:/flyway/sql:ro
+    environment:
+      FLYWAY_URL: jdbc:postgresql://postgres:5432/${DATABASE_NAME}
+      FLYWAY_USER: ${DATABASE_USER}
+      FLYWAY_PASSWORD: ${DATABASE_PASSWORD}
+      FLYWAY_LOCATIONS: filesystem:/flyway/sql
+      FLYWAY_TABLE: flyway_schema_history
+      FLYWAY_CONNECT_RETRIES: 10
+    command: migrate
+    networks:
+      - register-system-net-prod
+
+  seed:
+    image: postgres:17-alpine
+    container_name: register-system-seed-prod
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./database/seeds:/seeds:ro
+    environment:
+      PGPASSWORD: ${DATABASE_PASSWORD}
+    entrypoint: >
+      sh -c "
+        for f in /seeds/*.sql; do
+          echo \"→ Running $$f...\";
+          psql -h postgres -U ${DATABASE_USER} -d ${DATABASE_NAME} -v ON_ERROR_STOP=1 -f \"$$f\";
+        done
+      "
+    networks:
+      - register-system-net-prod
+
+volumes:
+  postgres_data_prod:
+    driver: local
+  redis_data_prod:
+    driver: local
+
+networks:
+  register-system-net-prod:
+    driver: bridge

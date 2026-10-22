@@ -1,0 +1,47 @@
+# Git
+.git
+.gitignore
+.gitattributes
+
+# Dependencies & build (image installs its own)
+node_modules
+dist
+coverage
+*.tsbuildinfo
+
+# Environment & secrets (never bake into image)
+.env
+.env.*
+!.env.example
+
+# Tests (not needed at runtime)
+test
+
+# Database migrations/seeds live outside the app image if you run them separately;
+# keep them if your image runs migrations — otherwise exclude:
+# database
+
+# IDE & OS
+.vscode
+.idea
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Docs & tooling (not needed in image)
+docs
+github
+*.md
+!README.md
+Makefile
+.prettierrc
+eslint.config.ts
+pnpm-lock.yaml.bak
+pnpm-workspace.yaml.bak
+
+# Docker (avoid recursive context noise)
+Dockerfile*
+docker-compose*.yml
+.dockerignore

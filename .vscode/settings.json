@@ -1,0 +1,34 @@
+{
+  "editor.formatOnPaste": true,
+  "editor.formatOnType": true,
+  "editor.formatOnSave": true,
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": "explicit"
+  },
+  "editor.quickSuggestions": {
+    "strings": "on"
+  },
+  "[jsonc]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[typescript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.formatOnSave": true
+  },
+  "[javascript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.formatOnSave": true
+  },
+  "eslint.validate": ["javascript", "typescript"],
+  "explorer.compactFolders": false,
+  "liveServer.settings.donotShowInfoMsg": true,
+  "git.openRepositoryInParentFolders": "never",
+  "solidity.compileUsingRemoteVersion": "v0.8.28+commit.a1b79de6",
+  "solidity.evmVersion": "cancun",
+  "rest-client.environmentVariables": {
+    "dev": {
+      "baseUrl": "http://127.0.0.1:5000",
+      "accessToken": "eyJhbGciOiJIUzI1NiJ9.eyJhY2Nlc3NfbGV2ZWwiOiJNQVNURVIiLCJzdWIiOiI3NTE2NTcwOTc0MjE3NTY4MjU2IiwiaXNzIjoiVVNFUiIsImlhdCI6MTc5MjY4NTA5NywiZXhwIjoxNzkyNjg1OTk3fQ.GvrFK0w6vVp3qzfSWAED-w4R-0S_wH7KDZAVRRTnn7w"
+    }
+  }
+}

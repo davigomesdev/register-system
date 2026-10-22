@@ -1,0 +1,39 @@
+@apiUrl = {{baseUrl}}/api/v1
+@token = {{accessToken}}
+
+### Search customers
+# Query parameters: page, perPage, sort (name|email|createdAt), sortDir (asc|desc), search.
+GET {{apiUrl}}/customers
+Authorization: Bearer {{token}}
+
+### Get customer
+GET {{apiUrl}}/customers/1
+Authorization: Bearer {{token}}
+
+### Create customer
+POST {{apiUrl}}/customers
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "Customer example",
+  "cpfCnpj": "27303725040",
+  "email": "cliente@example.com",
+  "phone": "85999999999"
+}
+
+### Update customer
+PUT {{apiUrl}}/customers/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "Customer update",
+  "cpfCnpj": "12345678909",
+  "email": "cliente@example.com",
+  "phone": "85999999999"
+}
+
+### Delete customer (soft)
+DELETE {{apiUrl}}/customers/1
+Authorization: Bearer {{token}}

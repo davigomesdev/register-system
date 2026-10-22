@@ -1,0 +1,12 @@
+@apiUrl = {{baseUrl}}/api/v1
+@token = {{accessToken}}
+
+### Search audit logs
+# Query parameters: page, perPage, sort (action|resource|createdAt), sortDir (asc|desc), actorId, resourceId, action, resource, actor (boolean).
+GET {{apiUrl}}/audit-logs
+Authorization: Bearer {{token}}
+
+### Get audit log
+# Query parameters: actor (boolean).
+GET {{apiUrl}}/audit-logs/1
+Authorization: Bearer {{token}}

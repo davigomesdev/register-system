@@ -1,0 +1,156 @@
+# =============================================================================
+# docker-compose.yml — Default stack (same as docker-compose-prod.yml,
+# but values come from .env.example)
+#
+#   make up
+#   # or:
+#   docker compose --env-file .env.example up -d --build
+#
+# NOTE: .env.example must define DATABASE_*, WEB_URL and the
+# 3 secrets (REDIS_PASSWORD is optional). The ":?" variables below fail fast
+# if they are missing/empty.
+# =============================================================================
+name: register-system
+
+services:
+  postgres:
+    image: postgres:17-alpine
+    container_name: register-system-postgres
+    restart: always
+    environment:
+      POSTGRES_DB: ${DATABASE_NAME:?DATABASE_NAME is required}
+      POSTGRES_USER: ${DATABASE_USER:?DATABASE_USER is required}
+      POSTGRES_PASSWORD: ${DATABASE_PASSWORD:?DATABASE_PASSWORD is required}
+      TZ: UTC
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DATABASE_USER} -d ${DATABASE_NAME}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+    networks:
+      - register-system-net
+
+  redis:
+    image: redis:7-alpine
+    container_name: register-system-redis
+    restart: always
+    environment:
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-}
+    # Password is optional: --requirepass is only added when REDIS_PASSWORD is set
+    command:
+      - sh
+      - -c
+      - exec redis-server --appendonly yes --maxmemory 512mb --maxmemory-policy allkeys-lru $${REDIS_PASSWORD:+--requirepass "$$REDIS_PASSWORD"}
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD-SHELL", "if [ -n \"$$REDIS_PASSWORD\" ]; then redis-cli -a \"$$REDIS_PASSWORD\" --no-auth-warning ping; else redis-cli ping; fi"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+    networks:
+      - register-system-net
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: runner
+    container_name: register-system-api
+    restart: always
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+      seed:
+        condition: service_completed_successfully
+    ports:
+      - "${PORT:-5000}:5000"
+    environment:
+      ENV: production
+      LOG_LEVEL: info
+
+      HOST: 0.0.0.0
+      PORT: 5000
+      WEB_URL: ${WEB_URL:?WEB_URL is required}
+
+      DATABASE_HOST: postgres
+      DATABASE_PORT: 5432
+      DATABASE_NAME: ${DATABASE_NAME:?DATABASE_NAME is required}
+      DATABASE_USER: ${DATABASE_USER:?DATABASE_USER is required}
+      DATABASE_PASSWORD: ${DATABASE_PASSWORD:?DATABASE_PASSWORD is required}
+      DATABASE_SSLMODE: ${DATABASE_SSLMODE:-disable}
+      DATABASE_TIMEZONE: UTC
+
+      REDIS_DB: ${REDIS_DB:-0}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-}
+
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY:?JWT_SECRET_KEY is required}
+      ENCRYPTION_KEY: ${ENCRYPTION_KEY:?ENCRYPTION_KEY is required}
+      REFRESH_TOKEN_SECRET_KEY: ${REFRESH_TOKEN_SECRET_KEY:?REFRESH_TOKEN_SECRET_KEY is required}
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:5000/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+    networks:
+      - register-system-net
+
+  migrate:
+    image: flyway/flyway:11-alpine
+    container_name: register-system-migrate
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./database/migrations:/flyway/sql:ro
+    environment:
+      FLYWAY_URL: jdbc:postgresql://postgres:5432/${DATABASE_NAME}
+      FLYWAY_USER: ${DATABASE_USER}
+      FLYWAY_PASSWORD: ${DATABASE_PASSWORD}
+      FLYWAY_LOCATIONS: filesystem:/flyway/sql
+      FLYWAY_TABLE: flyway_schema_history
+      FLYWAY_CONNECT_RETRIES: 10
+    command: migrate
+    networks:
+      - register-system-net
+
+  seed:
+    image: postgres:17-alpine
+    container_name: register-system-seed
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    volumes:
+      - ./database/seeds:/seeds:ro
+    environment:
+      PGPASSWORD: ${DATABASE_PASSWORD}
+    entrypoint: >
+      sh -c "
+        for f in /seeds/*.sql; do
+          echo \"→ Running $$f...\";
+          psql -h postgres -U ${DATABASE_USER} -d ${DATABASE_NAME} -v ON_ERROR_STOP=1 -f \"$$f\";
+        done
+      "
+    networks:
+      - register-system-net
+
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+
+networks:
+  register-system-net:
+    driver: bridge

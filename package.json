@@ -1,0 +1,68 @@
+{
+  "name": "register-system",
+  "version": "1.0.0",
+  "description": "REST API with session auth (JWT + refresh), RBAC, audit logging, soft-delete CRUD, PostgreSQL, Redis, Docker, and layered architecture.",
+  "main": "src/main.ts",
+  "scripts": {
+    "dev": "node --conditions=development --import=tsx/esm --env-file=.env.development src/main.ts",
+    "start": "node --env-file-if-exists=.env.production dist/main.js",
+    "lint": "eslint ./src/**",
+    "lint:fix": "eslint ./src/** --fix",
+    "build": "tsc -p tsconfig.build.json",
+    "test": "node --conditions=development --import tsx --test --test-reporter=spec ./src ./test/e2e",
+    "test:unit": "node --conditions=development --import tsx --test --test-reporter=spec ./src",
+    "test:e2e": "node --conditions=development --import tsx --test --test-reporter=spec ./test/e2e",
+    "test:integration": "node --conditions=development --import tsx --env-file=.env.development --test --test-reporter=spec ./test/integration",
+    "test:watch": "node --conditions=development --import tsx --test --watch ./src ./test/e2e"
+  },
+  "author": "Davi Gomes <davigomescarmo9@gmail.com>",
+  "license": "MIT",
+  "devEngines": {
+    "packageManager": {
+      "name": "pnpm",
+      "version": "12.14.0",
+      "onFail": "download"
+    }
+  },
+  "packageManager": "pnpm@12.14.0",
+  "type": "module",
+  "imports": {
+    "#src/*": {
+      "development": "./src/*",
+      "default": "./dist/*"
+    }
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@types/decimal.js": "^7.4.3",
+    "@types/node": "^26.6.5",
+    "@types/pg": "^8.23.1",
+    "eslint": "^10.13.0",
+    "globals": "^17.13.0",
+    "jiti": "^2.7.0",
+    "prettier": "^3.9.10",
+    "tsx": "^4.23.15",
+    "typescript": "^6.0.3",
+    "typescript-eslint": "^8.71.2"
+  },
+  "dependencies": {
+    "@fastify/cookie": "^11.1.3",
+    "@fastify/cors": "^11.3.1",
+    "@fastify/helmet": "^13.2.0",
+    "@fastify/multipart": "^10.1.4",
+    "@fastify/rate-limit": "^11.2.1",
+    "@sapphire/snowflake": "^3.5.5",
+    "argon2": "^0.45.1",
+    "cpf-cnpj-validator": "^2.1.2",
+    "decimal.js": "^10.6.0",
+    "fastify": "^5.12.7",
+    "fastify-type-provider-zod": "^7.0.0",
+    "ioredis": "^6.0.0",
+    "jose": "^6.2.13",
+    "json-with-bigint": "^3.5.12",
+    "libphonenumber-js": "^1.13.15",
+    "pg": "^8.23.1",
+    "pino": "^10.4.0",
+    "zod": "^4.6.7"
+  }
+}

@@ -1,0 +1,160 @@
+# =============================================================================
+# docker-compose-dev.yml — Development environment (no build, hot reload)
+# Usage: docker compose -f docker-compose-dev.yml up -d
+# =============================================================================
+name: register-system-dev
+
+services:
+  postgres:
+    image: postgres:17-alpine
+    container_name: register-system-postgres-dev
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${DATABASE_NAME:-register-system}
+      POSTGRES_USER: ${DATABASE_USER:-postgres}
+      POSTGRES_PASSWORD: ${DATABASE_PASSWORD:-123456}
+      TZ: UTC
+    ports:
+      - "${DATABASE_PORT:-5432}:5432"
+    volumes:
+      - postgres_data_dev:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DATABASE_USER:-postgres} -d ${DATABASE_NAME:-register-system}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - register-system-net-dev
+
+  redis:
+    image: redis:7-alpine
+    container_name: register-system-redis-dev
+    restart: unless-stopped
+    command: >
+      redis-server
+      --appendonly yes
+      --maxmemory 256mb
+      --maxmemory-policy allkeys-lru
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    volumes:
+      - redis_data_dev:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+    networks:
+      - register-system-net-dev
+
+  api:
+    image: node:22-alpine
+    container_name: register-system-api-dev
+    restart: unless-stopped
+    working_dir: /app
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    ports:
+      - "${PORT:-5000}:5000"
+    volumes:
+      - .:/app
+      - api_node_modules:/app/node_modules
+    command: >
+      sh -c "corepack enable &&
+             corepack prepare pnpm@12.14.0 --activate &&
+             pnpm install &&
+             pnpm dev"
+    environment:
+      ENV: development
+      LOG_LEVEL: debug
+
+      HOST: 0.0.0.0
+      PORT: 5000
+      WEB_URL: ${WEB_URL:-http://localhost:5173}
+
+      DATABASE_HOST: postgres
+      DATABASE_PORT: 5432
+      DATABASE_NAME: ${DATABASE_NAME:-register-system}
+      DATABASE_USER: ${DATABASE_USER:-postgres}
+      DATABASE_PASSWORD: ${DATABASE_PASSWORD:-123456}
+      DATABASE_SSLMODE: disable
+      DATABASE_TIMEZONE: UTC
+
+      REDIS_DB: ${REDIS_DB:-0}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-}
+
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY:-dev-jwt-secret-change-me-32chars!!}
+      ENCRYPTION_KEY: ${ENCRYPTION_KEY:-dev-encryption-key-change-me-32!}
+      REFRESH_TOKEN_SECRET_KEY: ${REFRESH_TOKEN_SECRET_KEY:-dev-refresh-token-secret-change-me}
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "fetch('http://127.0.0.1:5000/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))",
+        ]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 40s
+    networks:
+      - register-system-net-dev
+
+  migrate:
+    image: flyway/flyway:11-alpine
+    container_name: register-system-migrate-dev
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./database/migrations:/flyway/sql:ro
+    environment:
+      FLYWAY_URL: jdbc:postgresql://postgres:5432/${DATABASE_NAME:-register-system}
+      FLYWAY_USER: ${DATABASE_USER:-postgres}
+      FLYWAY_PASSWORD: ${DATABASE_PASSWORD:-123456}
+      FLYWAY_LOCATIONS: filesystem:/flyway/sql
+      FLYWAY_TABLE: flyway_schema_history
+      FLYWAY_CONNECT_RETRIES: 10
+    command: migrate
+    networks:
+      - register-system-net-dev
+
+  seed:
+    image: postgres:17-alpine
+    container_name: register-system-seed-dev
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./database/seeds:/seeds:ro
+    environment:
+      PGPASSWORD: ${DATABASE_PASSWORD:-123456}
+    entrypoint: >
+      sh -c "
+        for f in /seeds/*.sql; do
+          echo \"→ Running $$f...\";
+          psql -h postgres -U ${DATABASE_USER:-postgres} -d ${DATABASE_NAME:-register-system} -v ON_ERROR_STOP=1 -f \"$$f\";
+        done
+      "
+    networks:
+      - register-system-net-dev
+
+volumes:
+  postgres_data_dev:
+    driver: local
+  redis_data_dev:
+    driver: local
+  api_node_modules:
+    driver: local
+
+networks:
+  register-system-net-dev:
+    driver: bridge

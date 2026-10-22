@@ -1,0 +1,43 @@
+@apiUrl = {{baseUrl}}/api/v1
+@token = {{accessToken}}
+
+### Search products
+# Query parameters: page, perPage, sort (name|sku|costPrice|createdAt), sortDir (asc|desc), search, gender.
+GET {{apiUrl}}/products
+Authorization: Bearer {{token}}
+
+### Get product
+GET {{apiUrl}}/products/1
+Authorization: Bearer {{token}}
+
+### Create product
+POST {{apiUrl}}/products
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "sku": "SKU-001",
+  "name": "Product example",
+  "slug": "product-example",
+  "description": "Description product",
+  "costPrice": "19.9900",
+  "gender": "UNDEFINED"
+}
+
+### Update product
+PUT {{apiUrl}}/products/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "sku": "SKU-001",
+  "name": "Product update",
+  "slug": "product-update",
+  "description": "Description update",
+  "costPrice": "29.5000",
+  "gender": "MALE"
+}
+
+### Delete product (soft)
+DELETE {{apiUrl}}/products/1
+Authorization: Bearer {{token}}

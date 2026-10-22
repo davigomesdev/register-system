@@ -1,0 +1,33 @@
+@apiUrl = {{baseUrl}}/api/v1
+@token = {{accessToken}}
+
+### Create session
+POST {{apiUrl}}/sessions
+Content-Type: application/json
+X-Device-Info: HTTP Client / Desktop
+
+{
+  "email": "user@email.local",
+  "password": "123456"
+}
+
+### Refresh session
+POST {{apiUrl}}/sessions/refresh
+
+### List my sessions
+# Query parameters: page, perPage, sort (createdAt|lastUsedAt|expiresAt), sortDir (asc|desc), userId, familyId, activeOnly (boolean).
+GET {{apiUrl}}/sessions/me
+Authorization: Bearer {{token}}
+
+### Get one of my sessions
+# Query parameters: none.
+GET {{apiUrl}}/sessions/me/1
+Authorization: Bearer {{token}}
+
+### Revoke all my sessions
+DELETE {{apiUrl}}/sessions/me
+Authorization: Bearer {{token}}
+
+### Revoke a session
+DELETE {{apiUrl}}/sessions/me/1
+Authorization: Bearer {{token}}

@@ -1,0 +1,72 @@
+@apiUrl = {{baseUrl}}/api/v1
+@token = {{accessToken}}
+
+### Search users
+# Query parameters: page, perPage, sort (name|email|createdAt), sortDir (asc|desc), search, type, status.
+GET {{apiUrl}}/users
+Authorization: Bearer {{token}}
+
+### Get user
+GET {{apiUrl}}/users/1
+Authorization: Bearer {{token}}
+
+### Get my profile
+GET {{apiUrl}}/users/me
+Authorization: Bearer {{token}}
+
+### Create user
+POST {{apiUrl}}/users
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "User example",
+  "cpfCnpj": "12345678909",
+  "email": "user@example.com",
+  "phone": "85999999999",
+  "password": "password",
+  "type": "MASTER"
+}
+
+### Update user
+PUT {{apiUrl}}/users/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "User update",
+  "cpfCnpj": "12345678909",
+  "email": "user@example.com",
+  "phone": "85999999999"
+}
+
+### Update user status
+PATCH {{apiUrl}}/users/1/status
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "status": "ACTIVE"
+}
+
+### Update my profile (path follows the current route configuration)
+PUT {{apiUrl}}/users/me
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "My name",
+  "cpfCnpj": "12345678909",
+  "email": "me@example.com",
+  "phone": "85999999999"
+}
+
+### Update my password (path follows the current route configuration)
+PUT {{apiUrl}}/users/me/password
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "oldPassword": "senha-atual",
+  "newPassword": "nova-senha"
+}
